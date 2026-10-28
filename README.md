@@ -7,5 +7,5 @@ The project is also expanding to integrate real-time and historical environmenta
 
 ## Included Files
 
-- source("assignment3.R") – R script containing the implementation of all required functions.
+- [assignment3.R](assignment3.R) – R script containing the implementation of all required functions.
 - (assignment3.html) – Rendered HTML report containing code execution, output, and analysis.
