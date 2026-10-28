@@ -1,0 +1,124 @@
+---
+title: "assignment3"
+output: html_document
+date: "2026-09-01"
+---
+
+## Hypothesis: 
+There is no difference in average tire tread depth (TIRETREAD) between top tire manufacturers (TIREMANUF) and all other manufacturers.
+
+
+## 1) Load CSV 
+
+
+```{r}
+tire_data <- read.csv("tire_data.csv")
+#remove missing data
+clean_data <- subset(tire_data, TIRETREAD < 90)
+summary(tire_data)
+```
+# Boxplot of Tire Tread Depth vs Tire Location
+```{r}
+boxplot(TIRETREAD ~ TIRELOC, data = clean_data,
+        main = "Tire Tread Depth by Tire Location",
+        xlab = "Tire Location (LF, RF, LR, RR)",
+        ylab = "Tire Tread Depth")
+```
+Explanation:
+The tread depth distributions across all four tire positions look nearly identical, indicating that tire location alone does not create a dramatic difference in median tread depth across this dataset.
+
+
+## 2) Statistical Calculations:
+
+
+# Separate tread depth into Top Manufacturer (70) vs. Other Manufacturers
+70 is the the numerical manufacturing code for specific tires. It is the most common frequently occuring manufacturer in my dataset.
+```{r}
+top_manuf <- subset(clean_data, TIREMANUF == 70)$TIRETREAD
+other_manuf <- subset(clean_data, TIREMANUF != 70)$TIRETREAD
+```
+# Mean and Standard Deviation calculations
+```{r}
+mean_top <- mean(top_manuf)
+sd_top <- sd(top_manuf)
+
+mean_other <- mean(other_manuf)
+sd_other <- sd(other_manuf)
+```
+# Print results
+```{r}
+cat("Top Manufacturer Mean Tread:", mean_top, "\n")
+cat("Top Manufacturer Std Dev:", sd_top, "\n")
+cat("Other Manufacturers Mean Tread:", mean_other, "\n")
+cat("Other Manufacturers Std Dev:", sd_other, "\n")
+```
+# Simple barplot comparing means
+```{r}
+means_vector <- c(mean_top, mean_other)
+barplot(means_vector,
+        names.arg = c("Top Manufacturer", "Others"),
+        main = "Average Tire Tread Depth by Manufacturer Group",
+        ylab = "Mean Tread Depth")
+```
+Explanation:
+The top manufacturer group has a slightly higher average tread depth (6.21) than all other manufacturers (6.09). This small mean difference of 0.12 units suggests similar average wear levels between the two groups.
+
+## 3) Test 1:
+
+# Correlation test between Tire Size Type and Tire Tread Depth
+```{r}
+cor.test(clean_data$TIRESIZETYPE, clean_data$TIRETREAD)
+```
+# Linear Regression Model
+```{r}
+model <- lm(TIRETREAD ~ TIRESIZETYPE, data = clean_data)
+model_summary <- summary(model)
+model_summary
+```
+# Extract R-squared and p-value
+```{r}
+r_squared <- model_summary$r.squared
+p_val <- model_summary$coefficients[2, 4]
+
+cat("R-squared:", r_squared, "\n")
+cat("p-value:", p_val, "\n")
+```
+# Scatter plot with fitted regression line
+```{r}
+plot(clean_data$TIRESIZETYPE, clean_data$TIRETREAD,
+     main = "Regression: Tire Tread Depth by Tire Size Type",
+     xlab = "Tire Size Type",
+     ylab = "Tire Tread Depth",
+     )
+```
+Explanation:
+Although the p-value is extremely small because the dataset is so large (indicating a statistically significant relationship), the R^2 value is very close to zero (0.0119). This shows that tire size type alone does not practically explain or predict tire tread depth.
+
+## Test 2:
+
+# Plot histogram of numerical column TIRETREAD
+```{r}
+hist(clean_data$TIRETREAD,
+     main = "Histogram of Tire Tread Depth",
+     xlab = "Tire Tread Depth",
+     ylab = "Frequency",
+    )
+```
+Explanation:
+The histogram shows a right-skewed distribution for tire tread depth (TIRETREAD). Most recorded values cluster heavily around typical wear levels between 4 and 8, with fewer instances extending toward higher values.
+
+## 5) T.Test:
+
+
+# Divide data into two groups based on Manufacturer (Top vs Other)
+```{r}
+group_top <- subset(clean_data, TIREMANUF == 70)$TIRETREAD
+group_other <- subset(clean_data, TIREMANUF != 70)$TIRETREAD
+```
+# Apply two-sample t-test
+```{r}
+t_test_result <- t.test(group_top, group_other)
+t_test_result
+```
+Explanation of Results:
+Even though the practical difference in tread depth is small (6.21 vs 6.09), the dataset's large sample size gives the test high statistical power to confirm that the minor difference between manufacturer groups is statistically significant rather than being random.
