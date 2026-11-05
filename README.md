@@ -10,4 +10,4 @@ The project is also expanding to integrate real-time and historical environmenta
 - [assignment3.R](assignment3.R)
 - [assignment3.html](assignment3.html)
 - [tire_data.json.zip](tire_data.json.zip)
--[View Interactive D3 Tire Crash Analysis](d3_visualization/)
+  [d3_visualization/](d3_visualization/)
