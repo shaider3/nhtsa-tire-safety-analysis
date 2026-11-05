@@ -1,0 +1,141 @@
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const width = 1100;
+const height = 450;
+const margin = { top: 50, right: 50, bottom: 80, left: 100 };
+
+const svg = d3.select("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+const tooltip = d3.select("body").append("div")
+  .style("position", "absolute")
+  .style("background", "rgba(0,0,0,0.8)")
+  .style("color", "#fff")
+  .style("padding", "6px 12px")
+  .style("border-radius", "4px")
+  .style("font-size", "12px")
+  .style("pointer-events", "none")
+  .style("opacity", 0);
+
+d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
+  .then(rawData => {  
+    
+  const filtered = rawData.filter(d => d.TIRESIZE && d.TIRESIZE !== "UNKNOWN" && Number(d.TIRETREAD) > 0);
+  
+  const aggregated = Array.from(
+    d3.rollup(
+      filtered,
+      v => ({
+        count: v.length,
+        avgTread: d3.mean(v, d => Number(d.TIRETREAD))
+      }),
+      d => d.TIRESIZE
+    ),
+    ([size, metrics]) => ({ size, count: metrics.count, avgTread: metrics.avgTread })
+  )
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10); // Focus on Top 10 most common crash tire sizes
+
+  const xScale = d3.scaleBand()
+    .domain(aggregated.map(d => d.size))
+    .range([margin.left, width - margin.right])
+    .padding(0.4);
+
+  const yScaleCount = d3.scaleLinear()
+    .domain([0, d3.max(aggregated, d => d.count)])
+    .range([height - margin.bottom, margin.top]);
+
+  const radiusScaleTread = d3.scaleLinear()
+    .domain([0, d3.max(aggregated, d => d.avgTread)])
+    .range([4, 18]);
+
+  svg.selectAll(".bar")
+    .data(aggregated)
+    .enter()
+    .append("rect")
+    .attr("class", "bar")
+    .attr("x", d => xScale(d.size))
+    .attr("y", d => yScaleCount(d.count))
+    .attr("width", xScale.bandwidth())
+    .attr("height", d => height - margin.bottom - yScaleCount(d.count))
+    .attr("fill", "#3498db")
+    .attr("rx", 4)
+    .on("mouseover", (event, d) => {
+      tooltip.style("opacity", 1)
+        .html(`<strong>Size:</strong> ${d.size}<br/><strong>Crashes:</strong> ${d.count}<br/><strong>Avg Tread:</strong> ${d.avgTread.toFixed(1)}/32"`);
+    })
+    .on("mousemove", (event) => {
+      tooltip.style("left", (event.pageX + 10) + "px")
+             .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", () => tooltip.style("opacity", 0));
+
+  svg.selectAll(".tread-circle")
+    .data(aggregated)
+    .enter()
+    .append("circle")
+    .attr("class", "tread-circle")
+    .attr("cx", d => xScale(d.size) + xScale.bandwidth() / 2)
+    .attr("cy", d => yScaleCount(d.count) - 20)
+    .attr("r", d => radiusScaleTread(d.avgTread))
+    .attr("fill", "#e74c3c")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5);
+
+  svg.selectAll(".tread-label")
+    .data(aggregated)
+    .enter()
+    .append("text")
+    .attr("x", d => xScale(d.size) + xScale.bandwidth() / 2)
+    .attr("y", d => yScaleCount(d.count) - 20)
+    .attr("dy", "0.35em")
+    .attr("text-anchor", "middle")
+    .attr("fill", "#ffffff")
+    .style("font-size", "10px")
+    .style("font-weight", "bold")
+    .text(d => d.avgTread.toFixed(1));
+
+  const xAxis = d3.axisBottom(xScale);
+  const yAxis = d3.axisLeft(yScaleCount);
+
+  svg.append("g")
+    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .call(xAxis)
+    .selectAll("text")
+    .attr("transform", "rotate(-30)")
+    .style("text-anchor", "end");
+
+  svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(yAxis);
+
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", margin.top / 2)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "bold")
+    .text("Top NHTSA Crash Tire Sizes vs. Average Tread Depth");
+  
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "14px")
+    .style("font-weight", "bold")
+    .text("Tire Size");
+
+  // Y-Axis Label
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", 30)
+    .attr("text-anchor", "middle")
+    .style("font-size", "14px")
+    .style("font-weight", "bold")
+    .text("Crash Frequency");
+})
+.catch(error => {
+  console.error("Error loading JSON dataset:", error);
+});
