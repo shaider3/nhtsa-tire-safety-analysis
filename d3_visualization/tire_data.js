@@ -1,6 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-// 2. Visual Canvas Dimensions
 const width = 1100;
 const height = 450;
 const margin = { top: 50, right: 50, bottom: 80, left: 100 };
@@ -9,7 +8,6 @@ const svg = d3.select("svg")
   .attr("width", width)
   .attr("height", height);
 
-// Tooltip Setup
 const tooltip = d3.select("body").append("div")
   .style("position", "absolute")
   .style("background", "rgba(0,0,0,0.8)")
@@ -20,11 +18,9 @@ const tooltip = d3.select("body").append("div")
   .style("pointer-events", "none")
   .style("opacity", 0);
 
-// Load Data (Changed parameter name from 'data' to 'rawData' to match your filter)
 d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
   .then(rawData => {  
     
-  // Process Data: Exclude 'UNKNOWN', count crashes, and average tread depth
   const filtered = rawData.filter(d => d.TIRESIZE && d.TIRESIZE !== "UNKNOWN" && Number(d.TIRETREAD) > 0);
   
   const aggregated = Array.from(
@@ -41,7 +37,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
   .sort((a, b) => b.count - a.count)
   .slice(0, 10); // Focus on Top 10 most common crash tire sizes
 
-  // 3. Scales
   const xScale = d3.scaleBand()
     .domain(aggregated.map(d => d.size))
     .range([margin.left, width - margin.right])
@@ -55,7 +50,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     .domain([0, d3.max(aggregated, d => d.avgTread)])
     .range([4, 18]);
 
-  // 4. Element Set 1: Rectangles (Column 1 - Crash Frequency)
   svg.selectAll(".bar")
     .data(aggregated)
     .enter()
@@ -77,8 +71,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     })
     .on("mouseout", () => tooltip.style("opacity", 0));
 
-  // 5. Element Set 2: Circles (Column 2 - Average Tread Depth)
-  // Positioned directly above the bar, scaled by average tread depth
   svg.selectAll(".tread-circle")
     .data(aggregated)
     .enter()
@@ -91,7 +83,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     .attr("stroke", "#fff")
     .attr("stroke-width", 1.5);
 
-  // Text Elements: Labeling Tread Values inside/above circles
   svg.selectAll(".tread-label")
     .data(aggregated)
     .enter()
@@ -105,7 +96,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     .style("font-weight", "bold")
     .text(d => d.avgTread.toFixed(1));
 
-  // 6. Axes
   const xAxis = d3.axisBottom(xScale);
   const yAxis = d3.axisLeft(yScaleCount);
 
@@ -120,7 +110,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     .attr("transform", `translate(${margin.left}, 0)`)
     .call(yAxis);
 
-  // Axis Labels & Title
   svg.append("text")
     .attr("x", width / 2)
     .attr("y", margin.top / 2)
@@ -129,9 +118,6 @@ d3.json("https://shaider3.github.io/nhtsa-tire-safety-analysis/tire_data.json")
     .style("font-weight", "bold")
     .text("Top NHTSA Crash Tire Sizes vs. Average Tread Depth");
   
-  // --- ADD X AND Y AXIS LABELS ---
-
-  // X-Axis Label
   svg.append("text")
     .attr("x", width / 2)
     .attr("y", height - 10)
