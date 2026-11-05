@@ -9,5 +9,5 @@ The project is also expanding to integrate real-time and historical environmenta
 - [tire_data.csv](tire_data.csv)
 - [assignment3.R](assignment3.R)
 - [assignment3.html](assignment3.html)
-- [tire_data.json.zip](tire_data.json.zip)
+- [tire_data.json](tire_data.json)
 - [d3_visualization](https://shaider3.github.io/nhtsa-tire-safety-analysis/d3_visualization/)
